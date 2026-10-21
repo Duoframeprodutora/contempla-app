@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d6e66">
+<title>Contempla</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: app de coluna única para celular (máx. 560px), abas no topo, cards de grupo que abrem o detalhe no lugar. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#15202e; --muted:#5a6676; --line:#dce2e9;
+  --accent:#0d6e66; --accent-soft:#dff0ee; --on-accent:#ffffff; --client:#b86e0a; --client-soft:#fbefdc;
+  --good:#1d7a3e; --warn:#a86a00; --bad:#b3372f;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Source Sans 3",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151c; --surface:#17202a; --ink:#e6ebf1; --muted:#97a3b2; --line:#2a3644;
+  --accent:#4fc1b5; --accent-soft:#183a38; --on-accent:#08201e; --client:#f0a640; --client-soft:#3a2a12;
+  --good:#5cc983; --warn:#e8b04a; --bad:#ef7a70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151c; --surface:#17202a; --ink:#e6ebf1; --muted:#97a3b2; --line:#2a3644;
+  --accent:#4fc1b5; --accent-soft:#183a38; --on-accent:#08201e; --client:#f0a640; --client-soft:#3a2a12;
+  --good:#5cc983; --warn:#e8b04a; --bad:#ef7a70; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);-webkit-text-size-adjust:100%;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 8px;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.brand b{font:700 1.35rem/1 var(--f-display);letter-spacing:-.01em}
+.brand span{font-size:.75rem;color:var(--muted);text-align:right}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tabs button{font:600 .9rem var(--f-body);border:0;background:transparent;color:var(--muted);padding:9px 4px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font:700 1.1rem/1.2 var(--f-display);margin:0}
+p{margin:0}
+.note{font-size:.85rem;color:var(--muted)}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:600;min-width:0}
+label small{font-weight:400;color:var(--muted)}
+input,select{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.btn{font:700 1rem var(--f-body);padding:13px;border-radius:10px;border:0;background:var(--accent);color:var(--on-accent);cursor:pointer;width:100%}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:10px;font-size:.9rem}
+.alert{border-left:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem}
+.alert.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.sum{font-size:.9rem;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:10px}
+.g{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.g.open{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.gh{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:14px;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.gh .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gh .t b{font:700 1rem/1.25 var(--f-display);overflow-wrap:anywhere}
+.gh .t span{font-size:.82rem;color:var(--muted)}
+.gh .p{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.gh .p strong{font:700 1.35rem/1 var(--f-mono)}
+.pill{font:700 .66rem/1 var(--f-mono);padding:4px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em}
+.pill.good{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.pill.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.gd{padding:0 14px 16px;display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:14px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.duo div{background:var(--bg);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.duo div.hl{background:var(--accent-soft)}
+.duo span{font-size:.75rem;color:var(--muted);line-height:1.25}
+.duo strong{font:700 1.3rem var(--f-mono)}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:0;font-size:.85rem}
+.facts dt{color:var(--muted)} .facts dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font:11px var(--f-mono)}
+.why{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.prop{background:var(--accent-soft);border-radius:10px;padding:12px;font-size:.92rem;display:flex;flex-direction:column;gap:10px}
+.adm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.adm:last-child{border-bottom:0}
+.adm b{font-family:var(--f-display);overflow-wrap:anywhere}
+.adm .r{font:600 .85rem var(--f-mono);text-align:right}
+.adm .s{grid-column:1/-1;font-size:.8rem;color:var(--muted)}
+.seg{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-bottom:1px solid var(--line)}
+.seg:last-child{border-bottom:0}
+.seg b{font-family:var(--f-display);font-size:1.05rem}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.bar i{display:block;background:var(--accent)} .bar i+i{background:var(--client)}
+.legend{display:flex;gap:12px;font-size:.78rem;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+[hidden]{display:none!important}
+.g,#res{scroll-margin-top:118px}
+@media (prefers-reduced-motion:no-preference){.g{transition:border-color .15s}}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <div class="top">
+    <div class="brand"><b>Contempla</b><span id="base">Carregando base…</span></div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-tab="diag">Diagnóstico</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="adm">Administradoras</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="mer">Mercado</button>
+    </div>
+  </div>
+
+  <!-- DIAGNÓSTICO -->
+  <div id="tab-diag" style="display:flex;flex-direction:column;gap:14px">
+    <form class="card" id="quiz" autocomplete="off">
+      <h2>Perfil do cliente</h2>
+      <label for="objetivo">O que ele quer comprar
+        <select id="objetivo"><option value="1">Imóvel</option><option value="3">Carro</option><option value="4">Moto</option><option value="2">Caminhão, máquina, trator</option><option value="5">Outros bens</option><option value="6">Serviços</option></select></label>
+      <label for="credito">Valor da carta de crédito (R$)
+        <input id="credito" type="number" inputmode="numeric" step="10000" value="300000"></label>
+      <div class="row2">
+        <label for="parcela">Parcela máxima (R$)
+          <input id="parcela" type="number" inputmode="numeric" step="100" value="3500"></label>
+        <label for="renda">Renda mensal (R$)
+          <input id="renda" type="number" inputmode="numeric" step="500" value="12000"></label>
+      </div>
+      <div class="row2">
+        <label for="prazo">Quer a carta em até (meses)
+          <input id="prazo" type="number" inputmode="numeric" min="1" max="120" value="24"></label>
+        <label for="lance">Lance disponível (R$)
+          <input id="lance" type="number" inputmode="numeric" step="5000" value="60000"></label>
+      </div>
+      <label for="admFiltro">Administradora <small>opcional</small>
+        <select id="admFiltro"><option value="">Todas</option></select></label>
+      <label for="prioridade">Prioridade do cliente
+        <select id="prioridade"><option value="prazo">Ser contemplado rápido</option><option value="equilibrio" selected>Equilíbrio</option><option value="custo">Pagar menos</option></select></label>
+      <button type="submit" class="btn">Ver grupos recomendados</button>
+    </form>
+
+    <div id="res" style="display:flex;flex-direction:column;gap:10px">
+      <div class="brand" style="align-items:center"><h2>Grupos recomendados</h2></div>
+      <p class="sum" id="sum">Carregando grupos…</p>
+      <div id="alertas" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="list" id="lista"></div>
+    </div>
+  </div>
+
+  <!-- ADMINISTRADORAS -->
+  <div id="tab-adm" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="card">
+      <h2>Administradoras</h2>
+      <div class="row2">
+        <label for="admBusca">Buscar<input id="admBusca" type="search" placeholder="Nome"></label>
+        <label for="admSeg">Segmento<select id="admSeg"><option value="">Todos</option><option value="1">Imóvel</option><option value="3">Carro</option><option value="4">Moto</option><option value="2">Pesados</option><option value="5">Outros bens</option><option value="6">Serviços</option></select></label>
+      </div>
+      <p class="note">Ordenadas por número de cotas ativas. "Contempla por mês" é a chance média de uma cota ainda não contemplada sair no mês. Reclamações: índice do ranking do Banco Central 2026, quanto maior, pior.</p>
+      <div id="admLista"></div>
+    </div>
+  </div>
+
+  <!-- MERCADO -->
+  <div id="tab-mer" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="card">
+      <h2>Como a contemplação acontece</h2>
+      <p id="merLede"></p>
+      <div class="legend"><span><i style="background:var(--accent)"></i>por lance</span><span><i style="background:var(--client)"></i>por sorteio</span></div>
+      <div id="merLista"></div>
+      <p class="note">Fonte: Banco Central, dados consolidados de consórcio. Lance e sorteio: último trimestre disponível.</p>
+    </div>
+  </div>
+
+  <p class="note" style="text-align:center">Estimativas com base no histórico público do Banco Central. Não é garantia de contemplação. Confirme parcela e condições no simulador da administradora.</p>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+  const pct=v=>(v*100).toLocaleString("pt-BR",{maximumFractionDigits:v<.1?1:0})+"%";
+  const int=v=>Math.round(v).toLocaleString("pt-BR");
+  const SEG={1:"Imóvel",2:"Pesados",3:"Carro",4:"Moto",5:"Outros bens",6:"Serviços"};
+  const med=p=>p>0?Math.log(.5)/Math.log(1-p):Infinity;
+  const tempo=m=>!isFinite(m)||m>240?"mais de 20 anos":m<24?Math.ceil(m)+" meses":(m/12).toFixed(0)+" anos";
+  const RECL=[["HONDA",50.47],["BRADESCO",144.91],["ITAÚ ADM",174.69],["PORTO SEGURO",468.21],["SICREDI",33.04],["SANTANDER",233.03],["EMBRACON",276.30],["CNP CONSORCIO",409.80],["VOLKSWAGEN",368.23],["BAMAQ",170.45],["EVOY",9281.10]];
+  const TOP5=["CONSÓRCIO RESERVA","PROMOVE","ALPHA ADM"];
+  function recl(n){n=n.toUpperCase();const r=RECL.find(x=>n.includes(x[0]));if(r)return {v:r[1],t:r[1].toLocaleString("pt-BR",{maximumFractionDigits:0})};if(TOP5.some(x=>n.includes(x)))return {v:5000,t:"top 5"};if(n.includes("SIMPALA"))return {v:99999,t:"liquidada"};return null}
+  const nome=n=>n.toLowerCase().replace(/(^|\s|\.|-|\/)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/\bAdm(?=\s|$)/g,"Adm.").replace(/\bCons(?=\s|$)/g,"Cons.").replace(/\.\./g,".").replace(/\bS\.a\./i,"S.A.").replace(/\bLtda\b\.?/i,"Ltda").replace(/\bBb\b/,"BB").replace(/\bCnp\b/,"CNP").replace(/\bHs\b/,"HS");
+
+  // abas
+  document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+    ["diag","adm","mer"].forEach(t=>$("tab-"+t).hidden=t!==b.dataset.tab);
+    window.scrollTo({top:0});
+  });
+
+  let D,AS={},SM={},grupos=[],aberto=null;
+  Promise.resolve(window.__BCB__||fetch("dados/bcb.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})).then(d=>{
+    D=d;
+    d.segmentos.forEach(a=>{
+      const lt=a.lanceTri||0,st=a.sortTri||0;
+      AS[a.cnpj+"|"+a.seg]={h:a.naocont>0?a.contmes/a.naocont:0,s:lt+st>20?lt/(lt+st):null};
+      const m=SM[a.seg]||(SM[a.seg]={ativas:0,cont:0,naoc:0,lt:0,st:0,inad:0});
+      m.ativas+=a.ativas;m.cont+=a.contmes;m.naoc+=a.naocont;m.lt+=lt;m.st+=st;m.inad+=a.inad*a.ativas;
+    });
+    Object.values(SM).forEach(m=>{m.h=m.cont/m.naoc;m.s=m.lt/(m.lt+m.st)});
+    grupos=d.grupos.map(r=>({adm:d.adms[r[0]][1],cnpj:d.adms[r[0]][0],id:r[1],seg:r[2],credito:r[3],taxa:r[4],prazo:r[5],decorridos:r[6],ativas:r[7],naoc:r[8],hg:r[9],inad:r[10],conts:r[12]}));
+    const nA=new Set(d.segmentos.map(a=>a.cnpj)).size;
+    $("base").textContent=`${nA} administradoras · ${int(grupos.length)} grupos`;
+    const nomes=[...new Set(d.segmentos.filter(a=>a.ativas>0).map(a=>a.adm))].sort((a,b)=>a.localeCompare(b));
+    $("admFiltro").innerHTML='<option value="">Todas</option>'+nomes.map(n=>`<option value="${n}">${nome(n)}</option>`).join("");
+    render();renderAdm();renderMer();
+  }).catch(e=>{$("base").textContent="Erro ao carregar a base";$("sum").textContent="Não consegui carregar a base ("+e.message+").";});
+
+  function avalia(g,q){
+    const k=Math.round(q.credito/g.credito); if(k<1||k>2)return null;
+    const cred=g.credito*k; if(Math.abs(cred-q.credito)/q.credito>.3)return null;
+    const rest=g.prazo-g.decorridos; if(rest<Math.max(12,q.prazo))return null;
+    const as=AS[g.cnpj+"|"+g.seg]||{}; const s=as.s!=null?as.s:SM[g.seg].s;
+    const expo=g.conts.length*g.naoc,w=expo/(expo+300);
+    const h=Math.min(.6,w*g.hg+(1-w)*(as.h||SM[g.seg].h)), hS=h*(1-s);
+    const pS=1-Math.pow(1-hS,k), pL=1-(1-h)*Math.pow(1-hS,k-1);
+    const pm=q.lance>0?pL:pS;
+    const parcela=cred*(1+g.taxa/100)/rest;
+    return {g,k,cred,parcela,rest,s,h,pS,pL,pPrazo:1-Math.pow(1-pm,q.prazo),pPrazoS:1-Math.pow(1-pS,q.prazo),pPrazoL:1-Math.pow(1-pL,q.prazo),porLance:h*s*g.naoc,lancePct:q.lance/cred*100};
+  }
+  function nota(r,q){
+    const f=q.parcela/r.parcela; r.fit=f>=1?1:Math.max(0,1-(1-f)*4);
+    const custo=1-Math.min(1,r.g.taxa/30), w={prazo:[1,.1],equilibrio:[1,.3],custo:[.7,.7]}[q.prior];
+    const rc=recl(r.g.adm);
+    return Math.pow(r.pPrazo,w[0])*r.fit*(1-w[1]+w[1]*custo)*(rc&&rc.v>1000?.5:1);
+  }
+  const nivel=p=>p>=.6?["good","Boa"]:p>=.3?["warn","Média"]:["bad","Baixa"];
+  const Q=()=>({seg:+$("objetivo").value,credito:+$("credito").value||1,renda:+$("renda").value||0,parcela:+$("parcela").value||0,prazo:Math.max(1,+$("prazo").value||1),lance:+$("lance").value||0,prior:$("prioridade").value,adm:$("admFiltro").value});
+  let ultimo=[];
+  function render(){
+    if(!grupos.length)return;
+    const q=Q(),res=[];
+    for(const g of grupos){if(g.seg!==q.seg||(q.adm&&g.adm!==q.adm))continue;const r=avalia(g,q);if(!r)continue;r.nota=nota(r,q);res.push(r)}
+    res.sort((a,b)=>b.nota-a.nota); ultimo=res.slice(0,10);
+    $("sum").textContent=res.length?`${int(res.length)} grupos compatíveis. Mostrando os 10 melhores. Chance de ser contemplado em até ${q.prazo} meses ${q.lance>0?"dando lance":"só no sorteio"}.`:"";
+    const al=[];
+    if(q.renda&&q.parcela>q.renda*.3)al.push(`<div class="alert">A parcela máxima passa de 30% da renda (${brl(q.renda*.3)}). Risco de atraso, e com três parcelas atrasadas a cota é excluída.</div>`);
+    if(!q.lance&&SM[q.seg])al.push(`<div class="alert">Sem lance o cliente depende só do sorteio. Em ${SEG[q.seg].toLowerCase()}, ${pct(SM[q.seg].s)} das contemplações saem por lance.</div>`);
+    $("alertas").innerHTML=al.join("");
+    if(!ultimo.find(r=>r.g.id+r.g.adm===aberto))aberto=null;
+    $("lista").innerHTML=ultimo.map((r,i)=>{const [c,t]=nivel(r.pPrazo),key=r.g.id+r.g.adm,op=key===aberto;return `
+      <div class="g${op?" open":""}">
+        <button type="button" class="gh" data-k="${key}" aria-expanded="${op}">
+          <span class="t"><b>${i+1}. ${nome(r.g.adm)}</b><span>Grupo ${r.g.id} · ${r.k>1?r.k+" cotas de ":""}${brl(r.g.credito)}</span><span>Parcela ~${brl(r.parcela)}${r.fit<1?" · acima do limite":""} · faltam ${r.rest} meses</span></span>
+          <span class="p"><strong>${pct(r.pPrazo)}</strong><span class="pill ${c}">${t}</span></span>
+        </button>
+        ${op?detalhe(r,q):""}
+      </div>`}).join("")||'<p class="note">Nenhum grupo com carta parecida (até 30% de diferença) e prazo restante suficiente. Tente mudar o valor da carta, o prazo ou a administradora.</p>';
+    document.querySelectorAll(".gh").forEach(b=>b.onclick=()=>{aberto=aberto===b.dataset.k?null:b.dataset.k;render();if(aberto){const el=document.querySelector(`.gh[data-k="${CSS.escape(aberto)}"]`);el&&el.scrollIntoView({block:"start",behavior:"smooth"})}});
+    document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>{const t=b.parentElement.querySelector("p").textContent;
+      const ok=()=>b.textContent="Texto copiado";
+      (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(ok).catch(()=>{const s=getSelection(),rg=document.createRange();rg.selectNodeContents(b.parentElement.querySelector("p"));s.removeAllRanges();s.addRange(rg);b.textContent="Texto selecionado, copie"})});
+  }
+  function detalhe(r,q){
+    const rc=recl(r.g.adm),mc=r.g.conts.reduce((a,b)=>a+b,0)/r.g.conts.length;
+    const avisos=(rc&&rc.v>1000?`<div class="alert bad">${rc.t==="liquidada"?"Administradora liquidada pelo Banco Central.":rc.t==="top 5"?"Entre as 5 administradoras com mais reclamações no Banco Central.":"Índice de reclamações muito alto no Banco Central ("+rc.t+")."}</div>`:"")+(r.g.inad>.15?`<div class="alert">Grupo com inadimplência alta: ${pct(r.g.inad)} das cotas em atraso.</div>`:"");
+    const texto=`Para o seu projeto, recomendamos o grupo ${r.g.id} da ${nome(r.g.adm)}, com carta de ${brl(r.cred)}. Nos últimos meses este grupo contemplou em média ${mc.toFixed(1).replace(".",",")} cotas por mês. ${q.lance>0?`Com um lance competitivo, a chance histórica de ser contemplado em até ${q.prazo} meses é de ${pct(r.pPrazoL)}; só pelo sorteio, ${pct(r.pPrazoS)}.`:`Só pelo sorteio, a chance em até ${q.prazo} meses é de ${pct(r.pPrazoS)}.`} A parcela estimada é de ${brl(r.parcela)}. Estimativa feita com dados públicos do Banco Central, não é garantia de contemplação.`;
+    return `<div class="gd">${avisos}
+      <div class="duo">
+        <div><span>Só sorteio, em ${q.prazo} meses</span><strong>${pct(r.pPrazoS)}</strong></div>
+        <div class="hl"><span>Com lance competitivo, em ${q.prazo} meses</span><strong>${pct(r.pPrazoL)}</strong></div>
+      </div>
+      <dl class="facts">
+        <dt>Contemplados por mês</dt><dd>${mc.toFixed(1).replace(".",",")}</dd>
+        <dt>Desses, por lance</dt><dd>${pct(r.s)}</dd>
+        <dt>Cotas ativas</dt><dd>${int(r.g.ativas)}</dd>
+        <dt>Ainda sem contemplação</dt><dd>~${int(r.g.naoc)}</dd>
+        <dt>Taxa de administração</dt><dd>${String(r.g.taxa).replace(".",",")}%</dd>
+        <dt>Prazo do grupo</dt><dd>${r.g.decorridos} de ${r.g.prazo} meses</dd>
+        <dt>Lance do cliente</dt><dd>${r.lancePct.toFixed(1).replace(".",",")}% da carta</dd>
+      </dl>
+      <div><p class="note" style="margin-bottom:4px">Contemplados por mês neste grupo</p>${barras(r.g)}</div>
+      <div><p class="note" style="margin-bottom:4px">Chance acumulada mês a mês</p>${curva(r,q.prazo)}</div>
+      <ul class="why">
+        <li>"Com lance competitivo" vale para quem oferta um lance do tamanho dos que costumam ganhar neste grupo. Confira os últimos lances vencedores no portal da administradora antes de prometer.</li>
+        <li>Parcela estimada para entrar agora: carta mais taxa, dividida pelos ${r.rest} meses restantes. Confirme no simulador.</li>
+      </ul>
+      <div class="prop"><b>Texto para a proposta</b><p>${texto}</p><button type="button" class="btn ghost" data-copy>Copiar texto</button></div>
+    </div>`;
+  }
+  function barras(g){
+    const W=320,H=140,L=26,B=24,T=8,R=6,n=g.conts.length,mx=Math.max(3,...g.conts),bw=(W-L-R)/n,y=v=>H-B-(v/mx)*(H-B-T);
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Contemplados por mês">`;
+    const st=Math.max(1,Math.ceil(mx/3));for(let v=0;v<=mx;v+=st)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+    g.conts.forEach((c,i)=>s+=`<rect x="${L+i*bw+2}" y="${y(c)}" width="${Math.max(2,bw-4)}" height="${H-B-y(c)}" fill="var(--accent)" rx="2"/>`);
+    return s+`<text x="${L}" y="${H-6}">${n>4?"há 12 meses":"há 1 ano"}</text><text x="${W-R}" y="${H-6}" text-anchor="end">agora</text></svg>`;
+  }
+  function curva(r,prazo){
+    const W=320,H=150,L=34,B=24,T=10,R=6,M=Math.max(24,Math.min(120,prazo*2)),x=t=>L+t/M*(W-L-R),y=p=>H-B-p*(H-B-T);
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Chance acumulada">`;
+    [0,.5,1].forEach(p=>s+=`<line x1="${L}" x2="${W-R}" y1="${y(p)}" y2="${y(p)}" stroke="var(--line)"/><text x="${L-5}" y="${y(p)+4}" text-anchor="end">${p*100}%</text>`);
+    const st=M<=36?12:24;for(let t=0;t<=M;t+=st)s+=`<text x="${x(t)}" y="${H-6}" text-anchor="middle">${t}m</text>`;
+    [[r.pS,"var(--muted)","sorteio",1],[r.pL,"var(--accent)","com lance",0]].forEach(([pm,c,lb,dash])=>{let d="";for(let t=0;t<=M;t++)d+=(t?"L":"M")+x(t).toFixed(1)+","+y(1-Math.pow(1-pm,t)).toFixed(1);
+      s+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2.2"${dash?' stroke-dasharray="5 4"':""}/><text x="${W-R}" y="${Math.max(T+8,y(1-Math.pow(1-pm,M))-5)}" text-anchor="end" style="fill:${c}">${lb}</text>`});
+    const px=x(Math.min(prazo,M));
+    return s+`<line x1="${px}" x2="${px}" y1="${T}" y2="${H-B}" stroke="var(--client)" stroke-dasharray="3 3"/></svg>`;
+  }
+  function renderAdm(){
+    if(!D)return;const q=$("admBusca").value.trim().toUpperCase(),sf=$("admSeg").value,A={};
+    D.segmentos.forEach(a=>{if(sf&&String(a.seg)!==sf)return;const x=A[a.cnpj]||(A[a.cnpj]={adm:a.adm,ativas:0,cont:0,naoc:0,lt:0,st:0,inad:0,tx:0,segs:new Set()});
+      x.ativas+=a.ativas;x.cont+=a.contmes;x.naoc+=a.naocont;x.lt+=a.lanceTri||0;x.st+=a.sortTri||0;x.inad+=a.inad*a.ativas;x.tx+=a.taxa*a.ativas;if(a.ativas>0)x.segs.add(SEG[a.seg])});
+    const L=Object.values(A).filter(x=>x.ativas>0&&(!q||x.adm.toUpperCase().includes(q))).sort((a,b)=>b.ativas-a.ativas);
+    $("admLista").innerHTML=L.map(x=>{const r=recl(x.adm);return `<div class="adm"><b>${nome(x.adm)}</b><span class="r">${int(x.ativas)} cotas</span>
+      <span class="s">${[...x.segs].join(", ")}</span>
+      <span class="s">Contempla por mês ${x.naoc?pct(x.cont/x.naoc):"–"} · por lance ${x.lt+x.st>20?pct(x.lt/(x.lt+x.st)):"–"} · atraso ${pct(x.inad/x.ativas)} · taxa ${(x.tx/x.ativas).toFixed(1).replace(".",",")}%${r?` · <b style="color:${r.v>1000?"var(--bad)":"inherit"}">reclamações ${r.t}</b>`:""}</span></div>`}).join("")||'<p class="note">Nenhuma administradora encontrada.</p>';
+  }
+  function renderMer(){
+    const im=SM[1];
+    $("merLede").innerHTML=`Cerca de <b>${pct(im.s)} das contemplações de imóvel saem por lance</b>. Quem entra em imóvel sem lance tem perto de ${pct(im.h*(1-im.s))} de chance por mês. Por isso o lance é a pergunta mais importante do diagnóstico.`;
+    $("merLista").innerHTML=[1,3,4,2,5,6].filter(s=>SM[s]).map(s=>{const m=SM[s];return `<div class="seg"><b>${SEG[s]}</b>
+      <div class="bar"><i style="width:${(m.s*100).toFixed(1)}%"></i><i style="width:${((1-m.s)*100).toFixed(1)}%"></i></div>
+      <span class="note">${int(m.ativas)} cotas ativas · ${int(m.cont)} contemplados no mês · ${pct(m.s)} por lance · sem lance, espera mediana de ${tempo(med(m.h*(1-m.s)))} · ${pct(m.inad/m.ativas)} em atraso</span></div>`}).join("");
+  }
+  $("admBusca").addEventListener("input",renderAdm);$("admSeg").addEventListener("change",renderAdm);
+  $("quiz").addEventListener("change",render);
+  $("quiz").addEventListener("submit",e=>{e.preventDefault();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render();$("res").scrollIntoView({behavior:"smooth",block:"start"})});
+})();
+</script>
+
+</body>
+</html>
